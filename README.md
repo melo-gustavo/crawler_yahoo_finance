@@ -1,22 +1,92 @@
-Para fazer o projeto rodar, precisamos inicialmente criar a nossa .venv
+# Yahoo Finance Crawler
 
-* Para Linux:
-    - python3 -m venv .venv
+API em FastAPI para coletar empresas do Yahoo Finance Screener por região e exportar os dados em CSV.
 
-* Para Windows:
-    - python3 -m venv .venv
+## Objetivo
 
-Após criado, vamos precisar navegar para usar o ambiente virtual criado pelo comando anterior:
+Automatizar a navegação no screener de equities do Yahoo Finance para:
 
-* Para Linux:
-    - source .venv/bin/activate
+- aplicar filtro de `region`
+- configurar `Rows per page = 100`
+- paginar resultados
+- exportar `symbol`, `name`, `price` em CSV
 
-Com nosso projeto configurado, precisamos instalar as nossas dependências:
+## Stack
 
-* Para linux:
-    - pip install -r requirements.txt
+- Python 3.12+
+- FastAPI
+- Selenium
+- BeautifulSoup
 
-O projeto utiliza o FastAPI como framework para rodar o servidor e com ele temos o swagger já instalado que nos ajuda a validar as rotas que temos e rodar o projeto mais facilmente.
+## Setup
 
-* Para acessar as rotas utilize:
-    - http://localhost:8000/docs
+### 1) Criar ambiente virtual
+
+Windows:
+
+Criar o ambiente virtual
+
+```bash
+python -m venv .venv
+```
+
+Entrar no ambiente virtual
+
+```bash
+.venv\Scripts\Activate.ps1
+```
+
+Linux/macOS:
+
+Criar o ambiente virtual
+
+```bash
+python3 -m venv .venv
+```
+
+Entrar no ambiente virtual
+
+```bash
+source .venv/bin/activate
+```
+
+### 2) Instalar dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3) Rodar API
+
+```bash
+fastapi dev main.py
+```
+
+Docs interativas (Swagger):
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Endpoint
+
+### `GET /financial-data`
+
+Parâmetros:
+
+- `region` (obrigatório): região a ser filtrada no Yahoo (ex.: `brazil`)
+- `max_pages` (opcional): quantidade máxima de páginas para processar
+- `headless` (opcional, default `false`): executa navegador sem interface quando `true`
+
+Exemplos:
+
+```http
+GET /financial-data?region=brazil
+GET /financial-data?region=brazil&headless=true
+GET /financial-data?region=brazil&max_pages=3
+GET /financial-data?region=brazil&max_pages=3&headless=true
+```
+
+Retorno:
+
+- arquivo CSV com colunas: `symbol`, `name`, `price`
