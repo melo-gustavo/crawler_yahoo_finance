@@ -1,4 +1,3 @@
-import asyncio
 from unittest.mock import Mock, patch
 
 from crawlers.base_crawler import BaseCrawler
@@ -8,7 +7,7 @@ def test_finish_session_calls_quit_when_driver_exists():
     crawler = BaseCrawler()
     driver = Mock()
 
-    asyncio.run(crawler._finish_session(driver))
+    crawler._finish_session(driver)
 
     driver.quit.assert_called_once()
 
@@ -16,7 +15,7 @@ def test_finish_session_calls_quit_when_driver_exists():
 def test_finish_session_no_driver_is_safe():
     crawler = BaseCrawler()
 
-    asyncio.run(crawler._finish_session(None))
+    crawler._finish_session(None)
 
 
 def test_start_session_passes_headless_to_driver_start():
@@ -27,10 +26,11 @@ def test_start_session_passes_headless_to_driver_start():
     browser_instance = Mock()
     browser_instance.start.return_value = "driver-instance"
 
-    with patch("crawlers.base_crawler.detect_browser", return_value="Chrome"), patch(
-        "crawlers.base_crawler.GoogleChrome", return_value=browser_instance
+    with (
+        patch("crawlers.base_crawler.detect_browser", return_value="Chrome"),
+        patch("crawlers.base_crawler.GoogleChrome", return_value=browser_instance),
     ):
-        driver, browser = asyncio.run(crawler._start_session(request, headless=True))
+        driver, browser = crawler._start_session(request, headless=True)
 
     assert driver == "driver-instance"
     assert browser == "Chrome"
