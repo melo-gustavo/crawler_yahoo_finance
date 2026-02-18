@@ -68,6 +68,26 @@ Docs interativas (Swagger):
 http://127.0.0.1:8000/docs
 ```
 
+### 4) Rodar testes (pytest)
+
+Rodar todos os testes:
+
+```bash
+pytest
+```
+
+Rodar com saida detalhada:
+
+```bash
+pytest -v
+```
+
+Rodar um arquivo de teste especifico:
+
+```bash
+pytest tests/test_router_crawler.py -v
+```
+
 ## Endpoint
 
 ### `GET /financial-data`
