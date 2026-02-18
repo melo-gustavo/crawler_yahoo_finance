@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from fastapi.requests import Request
 
@@ -10,7 +12,7 @@ api = APIRouter(tags=["Crowler"])
 @api.get("/financial-data")
 def get_financial_data(
     request: Request,
-    params: FinancialDataQueryParams = Depends(),
+    params: Annotated[FinancialDataQueryParams, Depends()],
 ):
     """Get data and generate info financial companies"""
 
