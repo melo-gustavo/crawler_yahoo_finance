@@ -17,6 +17,7 @@ Automatizar a navegação no screener de equities do Yahoo Finance para:
 - FastAPI
 - Selenium
 - BeautifulSoup
+- Pytest
 
 ## Setup
 
