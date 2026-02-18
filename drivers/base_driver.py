@@ -1,7 +1,4 @@
 class BaseDriver:
-    def __init__(self):
-        pass
-
     def set_config_driver(self, options, headless: bool = False):
         if headless:
             options.add_argument("--headless")

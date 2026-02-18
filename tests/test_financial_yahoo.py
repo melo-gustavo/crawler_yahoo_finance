@@ -1,5 +1,4 @@
-import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -36,7 +35,7 @@ def test_get_attrs_rejects_invalid_max_pages():
     request = Mock()
 
     with pytest.raises(HTTPException) as exc:
-        asyncio.run(crawler.get_attrs(request=request, region="brazil", max_pages=0, headless=False))
+        crawler.get_attrs(request=request, region="brazil", max_pages=0, headless=False)
 
     assert exc.value.status_code == 400
 
@@ -54,9 +53,9 @@ def test_generate_csv_returns_bom_and_content():
         data=[FinancialRow(symbol="ITUB4.SA", name="Itaú Unibanco", price="47.77")],
     )
 
-    with patch.object(FinancialYahoo, "get_attrs", new=AsyncMock(return_value=fake_result)):
-        response = asyncio.run(
-            crawler.generate_csv(request=request, region="brazil", max_pages=1, headless=True)
+    with patch.object(FinancialYahoo, "get_attrs", return_value=fake_result):
+        response = crawler.generate_csv(
+            request=request, region="brazil", max_pages=1, headless=True
         )
 
     assert isinstance(response, Response)
