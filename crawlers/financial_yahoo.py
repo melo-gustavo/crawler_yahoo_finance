@@ -13,6 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from crawlers.base_crawler import BaseCrawler
+from schemas.crawler import FinancialDataResult, FinancialRow
 from utils.contants import (
     PAGINATION_BETWEEN_PAGES_SECONDS,
     PAGINATION_CLICK_SETTLE_SECONDS,
@@ -34,7 +35,7 @@ class FinancialYahoo:
         region: str,
         max_pages: int | None = None,
         headless: bool = False,
-    ) -> dict[str, Any]:
+    ) -> FinancialDataResult:
         crawler = BaseCrawler()
         normalized_region = region.title()
 
@@ -72,14 +73,14 @@ class FinancialYahoo:
                     detail=f"No records found for region '{normalized_region}'.",
                 )
 
-            return {
-                "browser": browser,
-                "region": normalized_region,
-                "max_pages": max_pages,
-                "headless": headless,
-                "total_records": len(data),
-                "data": data,
-            }
+            return FinancialDataResult(
+                browser=browser,
+                region=normalized_region,
+                max_pages=max_pages,
+                headless=headless,
+                total_records=len(data),
+                data=data,
+            )
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
         finally:
@@ -225,7 +226,7 @@ class FinancialYahoo:
         driver: WebDriver,
         region: str,
         max_pages: int | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[FinancialRow]:
         """Wait until the table is ready and extract all visible rows."""
         try:
             logger.info("Waiting for table to be ready before selecting rows per page")
@@ -248,9 +249,9 @@ class FinancialYahoo:
         self,
         driver: WebDriver,
         max_pages: int | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[FinancialRow]:
         """Iterate through all pages with 100 rows per page and collect all data."""
-        all_data = []
+        all_data: list[FinancialRow] = []
         page_num = 1
         seen_signatures: set[tuple[str, ...]] = set()
 
@@ -321,7 +322,7 @@ class FinancialYahoo:
                     logger.info("No data on current page, finishing pagination")
                     break
 
-                signature = tuple(item.get("symbol", "") for item in page_data[:5])
+                signature = tuple(item.symbol for item in page_data[:5])
                 if signature in seen_signatures:
                     logger.info("Repeated page detected, finishing pagination")
                     break
@@ -503,7 +504,7 @@ class FinancialYahoo:
 
 
 
-    def _extract_table_data(self, driver: WebDriver) -> list[dict[str, Any]]:
+    def _extract_table_data(self, driver: WebDriver) -> list[FinancialRow]:
         """Extract table rows as symbol, name, and price dictionaries."""
         try:
             soup = BeautifulSoup(driver.page_source, "html.parser")
@@ -526,7 +527,7 @@ class FinancialYahoo:
             price_index = find_index(["price", "last price"], 2)
 
             rows = table.select("tbody tr")
-            data = []
+            data: list[FinancialRow] = []
             for row in rows:
                 cells = row.select("td")
                 max_required_index = max(symbol_index, name_index, price_index)
@@ -538,11 +539,11 @@ class FinancialYahoo:
                 company_name = cells[name_index].get_text(" ", strip=True)
                 price_value = cells[price_index].get_text(" ", strip=True)
 
-                record = {
-                    "symbol": symbol,
-                    "name": company_name,
-                    "price": price_value,
-                }
+                record = FinancialRow(
+                    symbol=symbol,
+                    name=company_name,
+                    price=price_value,
+                )
                 data.append(record)
             return data
         except Exception as e:
@@ -562,8 +563,8 @@ class FinancialYahoo:
             max_pages=max_pages,
             headless=headless,
         )
-        rows = result.get("data") or result.get("sample_data", [])
-        normalized_region = str(result.get("region", region)).lower()
+        rows = result.data
+        normalized_region = str(result.region or region).lower()
         logger.info("CSV rows to export for region=%s: %s", normalized_region, len(rows))
 
         output = io.StringIO(newline="")
@@ -573,9 +574,9 @@ class FinancialYahoo:
         for row in rows:
             writer.writerow(
                 [
-                    str(row.get("symbol", "")),
-                    str(row.get("name", "")),
-                    str(row.get("price", "")),
+                    str(row.symbol),
+                    str(row.name),
+                    str(row.price),
                 ]
             )
 
